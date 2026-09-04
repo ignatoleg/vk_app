@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Матчи спортивного клуба</title>
+  <script src="https://unpkg.com/@vkontakte/vkui@4/dist/vkui.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@vkontakte/vkui@4/dist/vkui.css" />
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .status-upcoming { background: #2F80ED; }
+    .status-completed { background: #2196F3; }
+    .status-cancelled { background: #FF5252; }
+    .match-card {
+      margin: 8px 12px;
+      padding: 16px;
+      background: #F7F8FA;
+      border-radius: 12px;
+    }
+    .match-teams { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; }
+    .match-score { font-size: 20px; font-weight: bold; color: #000; }
+    .match-info { color: #8A90A5; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    // --- НАСТРОЙКИ МАТЧЕЙ (меняй тут) ---
+    const matches = [
+      {
+        id: 1,
+        date: "2026-09-20",
+        time: "15:00",
+        home: "Школа №1",
+        away: "Школа №5",
+        status: "upcoming",
+        score: null,
+        location: "Спортзал школы №1",
+        note: "Принести форму и воду"
+      },
+      {
+        id: 2,
+        date: "2026-09-15",
+        time: "14:30",
+        home: "Школа №1",
+        away: "Лицей №3",
+        status: "completed",
+        score: "3:2",
+        location: "Стадион Центральный",
+        note: ""
+      },
+      {
+        id: 3,
+        date: "2026-09-22",
+        time: "16:00",
+        home: "Школа №1",
+        away: "Гимназия №2",
+        status: "upcoming",
+        score: null,
+        location: "ФОК школы №1",
+        note: "Судейство — ученики 10 класса"
+      }
+    ];
+    // -------------------------------------
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    }
+
+    function sortMatches(matches) {
+      return [...matches].sort((a, b) => {
+        const da = new Date(a.date + 'T' + a.time);
+        const db = new Date(b.date + 'T' + b.time);
+        return da - db;
+      });
+    }
+
+    const upcoming = sortMatches(matches.filter(m => m.status === 'upcoming'));
+    const completed = sortMatches(matches.filter(m => m.status === 'completed')).reverse();
+    const cancelled = sortMatches(matches.filter(m => m.status === 'cancelled'));
+
+    const root = document.getElementById('root');
+
+    function renderStatus(status, score) {
+      if (status === 'upcoming') return `<span class="status-badge status-upcoming">Предстоит</span>`;
+      if (status === 'completed') return `<span class="status-badge status-completed">${score || 'Сыгран'}</span>`;
+      return `<span class="status-badge status-cancelled">Отменён</span>`;
+    }
+
+    function renderMatchesList(matchesList) {
+      if (!matchesList.length) return '<div style="padding:24px; color:#8A90A5;">Нет матчей в этой категории</div>';
+      return matchesList.map(m => `
+        <div class="match-card">
+          <div>${renderStatus(m.status, m.score)}</div>
+          <div style="margin:8px 0;">
+            <div style="font-weight:600;">${m.home} vs ${m.away}</div>
+            <div class="match-score">${m.score || ''}</div>
+          </div>
+          <div class="match-info">
+            ${formatDate(m.date)}, ${m.time} • ${m.location}
+          </div>
+          ${m.note ? `<div class="match-info" style="margin-top:4px;">💬 ${m.note}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    root.innerHTML = `
+      <div style="display:flex; flex-direction:column; height:100vh;">
+        <div style="flex:1; overflow-y:auto; padding-bottom:20px;">
+          <h2 style="margin:16px 0 8px;">Предстоящие матчи</h2>
+          ${renderMatchesList(upcoming)}
+
+          <h2 style="margin:24px 0 8px;">Результаты матчей</h2>
+          ${renderMatchesList(completed)}
+
+          ${cancelled.length > 0 ? `
+            <h2 style="margin:24px 0 8px;">Отменённые матчи</h2>
+            ${renderMatchesList(cancelled)}
+          ` : ''}
+        </div>
+        <div style="text-align:center; padding:12px; color:#8A90A5; font-size:12px;">
+          Приложение спортивного клуба школы
+        </div>
+      </div>
+    `;
+  </script>
+</body>
+</html>
